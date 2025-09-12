@@ -1,63 +1,66 @@
-version: '3.9'
+version: '3.8'
 
 services:
   app:
     build:
       context: .
       dockerfile: Dockerfile
-    image: webai_backend_api_app
-    container_name: webai_backend_api_app
+    image: webai-backend
+    container_name: webai-app
     restart: unless-stopped
     working_dir: /var/www
     volumes:
       - ./:/var/www
-    environment:
-      - APP_ENV=local
-      - APP_DEBUG=true
-      - APP_KEY=base64:SomeRandomKeyHere
-      - DB_CONNECTION=pgsql
-      - DB_HOST=db
-      - DB_PORT=5432
-      - DB_DATABASE=laravel
-      - DB_USERNAME=laravel
-      - DB_PASSWORD=secret
+      - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    networks:
+      - webai-network
     depends_on:
       - db
-    networks:
-      - laravel
+      - redis
 
-  nginx:
-    image: nginx:1.25-alpine
-    container_name: webai_backend_api_nginx
+  webserver:
+    image: nginx:alpine
+    container_name: webai-webserver
     restart: unless-stopped
     ports:
       - "8000:80"
     volumes:
       - ./:/var/www
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - webai-network
     depends_on:
       - app
-    networks:
-      - laravel
 
   db:
-    image: postgres:16-alpine
-    container_name: webai_backend_api_db
+    image: postgres:15
+    container_name: webai-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: laravel
-      POSTGRES_USER: laravel
-      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: webai_db
+      POSTGRES_USER: webai_user
+      POSTGRES_PASSWORD: webai_password
+      PGDATA: /var/lib/postgresql/data
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "5432:5432"
-    volumes:
-      - dbdata:/var/lib/postgresql/data
     networks:
-      - laravel
+      - webai-network
 
-networks:
-  laravel:
-    driver: bridge
+  redis:
+    image: redis:alpine
+    container_name: webai-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - webai-network
 
 volumes:
-  dbdata:
+  postgres_data:
+
+networks:
+  webai-network:
+    driver: bridge
