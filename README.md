@@ -59,3 +59,44 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+## Docker Setup
+
+This project includes Docker support for local development and testing.
+
+### Prerequisites
+- [Docker](https://www.docker.com/get-started)
+- [Docker Compose](https://docs.docker.com/compose/)
+
+### Usage
+
+1. **Copy the Docker environment file:**
+   ```bash
+   cp .env.docker .env
+   ```
+2. **Build and start the containers:**
+   ```bash
+   docker-compose up --build
+   ```
+3. **Access the application:**
+   - Laravel app: http://localhost:9000
+   - PostgreSQL DB: localhost:5432 (user: laravel, password: secret)
+
+### Common Commands
+- **Stop containers:**
+  ```bash
+  docker-compose down
+  ```
+- **Run migrations:**
+  ```bash
+  docker-compose exec app php artisan migrate
+  ```
+- **Run tests:**
+  ```bash
+  docker-compose exec app php artisan test
+  ```
+
+### Notes
+- The default database is PostgreSQL (see `.env.docker`).
+- For production, adjust environment variables and Docker settings as needed.
+- Node.js and Composer are installed in the app container for asset and dependency management.
