@@ -16,7 +16,7 @@ services:
       - webai-network
     depends_on:
       - db
-      - redis
+      # - redis
 
   webserver:
     image: nginx:alpine
@@ -49,14 +49,14 @@ services:
     networks:
       - webai-network
 
-  redis:
-    image: redis:alpine
-    container_name: webai-redis
-    restart: unless-stopped
-    ports:
-      - "6379:6379"
-    networks:
-      - webai-network
+  # redis:
+  #   image: redis:alpine
+  #   container_name: webai-redis
+  #   restart: unless-stopped
+  #   ports:
+  #     - "6379:6379"
+  #   networks:
+  #     - webai-network
 
 volumes:
   postgres_data:

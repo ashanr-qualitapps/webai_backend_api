@@ -1,18 +1,22 @@
-FROM php:8.2-fpm
+FROM php:8.2-fpm-alpine
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y \
+RUN apk add --no-cache \
     git \
     curl \
     libpng-dev \
-    libonig-dev \
     libxml2-dev \
     libpq-dev \
+    postgresql-dev \
+    freetype-dev \
+    libjpeg-turbo-dev \
+    oniguruma-dev \
     zip \
     unzip \
     supervisor
 
 # Install PHP extensions
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg
 RUN docker-php-ext-install pdo pdo_pgsql mbstring exif pcntl bcmath gd
 
 # Install Composer
