@@ -15,6 +15,7 @@ class CreateChatMessagesTable extends Migration
             $table->uuid('persona_id')->nullable();
             $table->string('message_type')->nullable();
             $table->text('message_text');
+            $table->json('embedding')->nullable(); // Vector embedding stored as JSON
             $table->timestampTz('created_at')->useCurrent();
 
             $table->foreign('session_id')->references('id')->on('chat_sessions')->onDelete('cascade');

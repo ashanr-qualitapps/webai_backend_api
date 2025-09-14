@@ -16,6 +16,8 @@ class CreateSnippetsTable extends Migration
             $table->text('ai_explanation')->nullable();
             $table->text('hyperlink_keywords')->nullable();
             $table->uuid('assigned_persona_id')->nullable();
+            $table->decimal('confidence_threshold', 5, 4)->nullable();
+            $table->boolean('is_active')->default(true);
             $table->timestampTz('created_at')->useCurrent();
             $table->timestampTz('updated_at')->useCurrent()->nullable();
 

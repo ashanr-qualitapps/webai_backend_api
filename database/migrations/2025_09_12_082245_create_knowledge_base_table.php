@@ -11,8 +11,10 @@ class CreateKnowledgeBaseTable extends Migration
             $table->uuid('id')->primary();
             $table->text('content'); // Main knowledge base text content
             $table->json('embedding')->nullable(); // For semantic search vector embedding (stored as JSON array)
+            $table->uuid('updated_by')->nullable();
             $table->timestampTz('created_at')->useCurrent();
             $table->timestampTz('updated_at')->useCurrent()->nullable();
+            $table->timestampTz('last_updated')->nullable();
         });
     }
 

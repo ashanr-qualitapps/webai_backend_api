@@ -10,14 +10,13 @@ class CreateSnippetSuggestionsTable extends Migration
     {
         Schema::create('snippet_suggestions', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->string('suggestion_name');
-            $table->string('button_text');
-            $table->text('ai_explanation')->nullable();
-            $table->integer('priority_score')->default(0);
-            $table->float('confidence_threshold')->default(0);
-            $table->boolean('is_active')->default(true);
+            $table->uuid('snippet_id');
+            $table->uuid('suggestion_id');
+            $table->integer('display_order');
             $table->timestampTz('created_at')->useCurrent();
-            $table->timestampTz('updated_at')->useCurrent()->nullable();
+
+            $table->foreign('snippet_id')->references('id')->on('snippets')->onDelete('cascade');
+            $table->foreign('suggestion_id')->references('id')->on('suggestions')->onDelete('cascade');
         });
     }
 

@@ -13,7 +13,9 @@ class CreatePersonasTable extends Migration
             $table->string('title')->nullable();
             $table->string('profile_picture_url')->nullable();
             $table->text('ai_expertise_description')->nullable();
+            $table->json('expertise_embedding')->nullable(); // Vector embedding stored as JSON
             $table->uuid('associated_profile_snippet_id')->nullable();
+            $table->boolean('is_active')->default(true);
             $table->timestampTz('created_at')->useCurrent();
             $table->timestampTz('updated_at')->useCurrent()->nullable();
 

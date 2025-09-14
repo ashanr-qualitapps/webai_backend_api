@@ -6,11 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
-use HasApiTokens;
+use Laravel\Passport\HasApiTokens;
 
 class AdminUser extends Authenticatable
 {
-    use HasFactory,  HasUuids;
+    use HasApiTokens, HasFactory, HasUuids;
 
     protected $table = 'admin_users';
     protected $primaryKey = 'id';
