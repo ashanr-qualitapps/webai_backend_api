@@ -15,6 +15,52 @@ This API uses Laravel Passport for OAuth2 authentication with short-lived access
 
 ### Authentication
 
+#### POST /api/v1/register
+Register a new admin user
+
+**Request:**
+```json
+{
+    "email": "admin@webai.com",
+    "password": "password123",
+    "password_confirmation": "password123",
+    "full_name": "Admin User",
+    "permissions": ["users.read", "users.create"],
+    "metadata": {"department": "IT", "role": "Administrator"},
+    "is_active": true
+}
+```
+
+**Response:**
+```json
+{
+    "success": true,
+    "message": "Admin user registered successfully",
+    "data": {
+        "user": {
+            "id": "550e8400-e29b-41d4-a716-446655440000",
+            "email": "admin@webai.com",
+            "full_name": "Admin User",
+            "permissions": ["users.read", "users.create"],
+            "is_active": true,
+            "created_at": "2025-09-15T10:00:00.000000Z",
+            "updated_at": "2025-09-15T10:00:00.000000Z"
+        }
+    }
+}
+```
+
+**Required Fields:**
+- `email`: Valid email address (must be unique)
+- `password`: Minimum 8 characters
+- `password_confirmation`: Must match password
+- `full_name`: User's full name
+
+**Optional Fields:**
+- `permissions`: Array of permission strings (defaults to empty array)
+- `metadata`: JSON object for additional user data (defaults to empty object)
+- `is_active`: Boolean to set user status (defaults to true)
+
 #### POST /api/v1/login
 Login and get access token
 

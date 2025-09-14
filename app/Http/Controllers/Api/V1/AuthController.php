@@ -81,6 +81,68 @@ class AuthController extends Controller
     }
 
     /**
+     * Register a new admin user
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function register(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email|unique:admin_users,email',
+            'password' => 'required|string|min:8|confirmed',
+            'full_name' => 'required|string|max:255',
+            'permissions' => 'nullable|array',
+            'metadata' => 'nullable|array',
+            'is_active' => 'nullable|boolean'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation error',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            // Create new admin user
+            $adminUser = AdminUser::create([
+                'email' => $request->email,
+                'password_hash' => Hash::make($request->password),
+                'full_name' => $request->full_name,
+                'permissions' => $request->permissions ?? [],
+                'metadata' => $request->metadata ?? [],
+                'is_active' => $request->is_active ?? true,
+                'last_updated' => now()
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Admin user registered successfully',
+                'data' => [
+                    'user' => [
+                        'id' => $adminUser->id,
+                        'email' => $adminUser->email,
+                        'full_name' => $adminUser->full_name,
+                        'permissions' => $adminUser->permissions,
+                        'is_active' => $adminUser->is_active,
+                        'created_at' => $adminUser->created_at,
+                        'updated_at' => $adminUser->updated_at
+                    ]
+                ]
+            ], 201);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to register admin user',
+                'error' => config('app.debug') ? $e->getMessage() : 'Internal server error'
+            ], 500);
+        }
+    }
+
+    /**
      * Refresh access token using refresh token
      *
      * @param Request $request

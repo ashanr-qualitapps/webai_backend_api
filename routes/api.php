@@ -19,6 +19,7 @@ Route::prefix('v1')->middleware(['auth.rate_limit'])->group(function () {
     // Authentication endpoints
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/refresh', [AuthController::class, 'refresh']);
+    Route::post('/register', [AuthController::class, 'register']);
 });
 
 // Protected routes (require authentication)
