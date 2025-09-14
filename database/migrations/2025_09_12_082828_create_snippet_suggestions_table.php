@@ -4,11 +4,11 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateSuggestionsTable extends Migration
+class CreateSnippetSuggestionsTable extends Migration
 {
     public function up()
     {
-        Schema::create('suggestions', function (Blueprint $table) {
+        Schema::create('snippet_suggestions', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('suggestion_name');
             $table->string('button_text');
@@ -23,6 +23,6 @@ class CreateSuggestionsTable extends Migration
 
     public function down()
     {
-        Schema::dropIfExists('suggestions');
+        Schema::dropIfExists('snippet_suggestions');
     }
 }

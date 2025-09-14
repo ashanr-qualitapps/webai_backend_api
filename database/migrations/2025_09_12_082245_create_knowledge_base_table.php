@@ -10,7 +10,7 @@ class CreateKnowledgeBaseTable extends Migration
         Schema::create('knowledge_base', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->text('content'); // Main knowledge base text content
-            $table->vector('embedding')->nullable(); // For semantic search vector embedding (if supported)
+            $table->json('embedding')->nullable(); // For semantic search vector embedding (stored as JSON array)
             $table->timestampTz('created_at')->useCurrent();
             $table->timestampTz('updated_at')->useCurrent()->nullable();
         });

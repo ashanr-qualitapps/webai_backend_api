@@ -17,7 +17,7 @@ class CreatePersonasTable extends Migration
             $table->timestampTz('created_at')->useCurrent();
             $table->timestampTz('updated_at')->useCurrent()->nullable();
 
-            $table->foreign('associated_profile_snippet_id')->references('id')->on('snippets')->onDelete('set null');
+            // Foreign key constraint will be added after snippets table is created
         });
     }
 
