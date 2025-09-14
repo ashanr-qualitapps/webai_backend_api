@@ -1,102 +1,281 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# WebAI Backend API
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A powerful Laravel-based REST API backend for AI-powered web applications, featuring PostgreSQL database integration and containerized development environment.
 
-## About Laravel
+[
+[
+[
+[
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 🚀 About This Project
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+WebAI Backend API is a robust, scalable backend service designed to power AI-integrated web applications. Built with Laravel's elegant architecture, it provides RESTful endpoints for AI processing, user management, and data analytics with enterprise-grade security and performance optimization.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### Key Features
 
-## Learning Laravel
+- 🤖 **AI Integration Ready** - Structured service layer for multiple AI providers
+- 🔐 **Secure Authentication** - JWT-based API authentication with role-based permissions
+- 🐘 **PostgreSQL Database** - Advanced relational database with AI-optimized schema
+- 🐳 **Docker Support** - Complete containerized development and deployment
+- 📊 **Real-time Processing** - Queue-based background job processing
+- 🔍 **API Documentation** - Interactive Swagger/OpenAPI documentation
+- ⚡ **Performance Optimized** - Redis caching and database query optimization
+- 🧪 **Test Coverage** - Comprehensive PHPUnit testing suite
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+## 🏗️ Architecture
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
 
-## Laravel Sponsors
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## 🛠️ Technology Stack
 
-### Premium Partners
+- **Backend Framework:** Laravel 10.x
+- **Language:** PHP 8.2+
+- **Database:** PostgreSQL 15+
+- **Caching:** Redis
+- **Queue System:** Laravel Queues with Redis driver
+- **Authentication:** JWT (JSON Web Tokens)
+- **Containerization:** Docker \& Docker Compose
+- **Testing:** PHPUnit with Feature \& Unit tests
+- **Documentation:** Swagger/OpenAPI 3.0
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
 
-## Contributing
+## 📋 Prerequisites
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Before you begin, ensure you have the following installed:
 
-## Code of Conduct
+- [Docker](https://docs.docker.com/get-docker/) (v20.0+)
+- [Docker Compose](https://docs.docker.com/compose/install/) (v2.0+)
+- [Git](https://git-scm.com/)
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
 
-## Security Vulnerabilities
+## 🚀 Quick Start
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### 1. Clone the Repository
 
-## License
+```bash
+git clone https://github.com/ashanr-qualitapps/webai_backend_api.git
+cd webai_backend_api
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
 
-## Docker Setup
+### 2. Environment Setup
 
-This project includes Docker support for local development and testing.
+```bash
+# Copy the Docker environment configuration
+cp .env.docker .env
 
-### Prerequisites
-- [Docker](https://www.docker.com/get-started)
-- [Docker Compose](https://docs.docker.com/compose/)
+# Optional: Customize your environment variables
+nano .env
+```
 
-### Usage
 
-1. **Copy the Docker environment file:**
-   ```bash
-   cp .env.docker .env
-   ```
-2. **Build and start the containers:**
-   ```bash
-   docker-compose up --build
-   ```
-3. **Access the application:**
-   - Laravel app: http://localhost:9000
-   - PostgreSQL DB: localhost:5432 (user: laravel, password: secret)
+### 3. Build and Start Containers
+
+```bash
+# Build and start all services
+docker-compose up --build -d
+
+# Check if containers are running
+docker-compose ps
+```
+
+
+### 4. Initialize the Application
+
+```bash
+# Install dependencies
+docker-compose exec app composer install
+
+# Generate application key
+docker-compose exec app php artisan key:generate
+
+# Run database migrations
+docker-compose exec app php artisan migrate
+
+# Seed the database (optional)
+docker-compose exec app php artisan db:seed
+```
+
+
+### 5. Verify Installation
+
+- **API Base URL:** http://localhost:9000
+- **Health Check:** http://localhost:9000/api/health
+- **API Documentation:** http://localhost:9000/api/documentation
+
+
+## 🔧 Development
+
+### Container Services
+
+| Service | URL | Credentials |
+| :-- | :-- | :-- |
+| Laravel App | http://localhost:9000 | - |
+| PostgreSQL | localhost:5432 | User: `laravel`, Password: `secret` |
+| Redis | localhost:6379 | No auth (development) |
 
 ### Common Commands
-- **Stop containers:**
-  ```bash
-  docker-compose down
-  ```
-- **Run migrations:**
-  ```bash
-  docker-compose exec app php artisan migrate
-  ```
-- **Run tests:**
-  ```bash
-  docker-compose exec app php artisan test
-  ```
 
-### Notes
-- The default database is PostgreSQL (see `.env.docker`).
-- For production, adjust environment variables and Docker settings as needed.
-- Node.js and Composer are installed in the app container for asset and dependency management.
+```bash
+# View application logs
+docker-compose logs -f app
+
+# Access application container
+docker-compose exec app bash
+
+# Run Artisan commands
+docker-compose exec app php artisan [command]
+
+# Run tests
+docker-compose exec app php artisan test
+
+# Stop all containers
+docker-compose down
+
+# Rebuild containers
+docker-compose up --build
+```
+
+
+### Database Management
+
+```bash
+# Run fresh migrations with seeding
+docker-compose exec app php artisan migrate:fresh --seed
+
+# Create new migration
+docker-compose exec app php artisan make:migration create_example_table
+
+# Access PostgreSQL directly
+docker-compose exec postgres psql -U laravel -d laravel
+```
+
+
+## 📚 API Documentation
+
+### Authentication
+
+The API uses JWT tokens for authentication. Include the token in your requests:
+
+```bash
+curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+     -H "Content-Type: application/json" \
+     http://localhost:9000/api/protected-endpoint
+```
+
+
+### Core Endpoints
+
+| Method | Endpoint | Description | Auth Required |
+| :-- | :-- | :-- | :-- |
+| POST | `/api/auth/login` | User authentication | ❌ |
+| POST | `/api/auth/register` | User registration | ❌ |
+| GET | `/api/user/profile` | Get user profile | ✅ |
+| POST | `/api/ai/process` | Process AI request | ✅ |
+| GET | `/api/ai/history` | Get AI request history | ✅ |
+
+### Example Request
+
+```bash
+# User Registration
+curl -X POST http://localhost:9000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "John Doe",
+    "email": "john@example.com",
+    "password": "secure_password"
+  }'
+```
+
+
+### Response Format
+
+```json
+{
+  "success": true,
+  "message": "Request processed successfully",
+  "data": {
+    "id": 1,
+    "name": "John Doe",
+    "email": "john@example.com"
+  },
+  "meta": {
+    "timestamp": "2025-09-15T04:10:00Z",
+    "version": "1.0.0"
+  }
+}
+```
+
+
+## 🧪 Testing
+
+```bash
+# Run all tests
+docker-compose exec app php artisan test
+
+# Run specific test suite
+docker-compose exec app php artisan test --testsuite=Feature
+
+# Run tests with coverage
+docker-compose exec app php artisan test --coverage
+
+# Run specific test file
+docker-compose exec app php artisan test tests/Feature/AuthTest.php
+```
+
+
+## 🔐 Security
+
+### Environment Variables
+
+Never commit sensitive data. Key environment variables:
+
+```env
+APP_KEY=base64:generated_key_here
+DB_PASSWORD=your_secure_password
+JWT_SECRET=your_jwt_secret_key
+OPENAI_API_KEY=your_openai_key
+```
+
+
+### Security Features
+
+- JWT token authentication with configurable expiration
+- Rate limiting on API endpoints
+- CORS protection with configurable origins
+- Input validation and sanitization
+- SQL injection prevention via Eloquent ORM
+- XSS protection with Laravel's built-in features
+
+
+## 📦 Deployment
+
+### Production Environment
+
+1. **Environment Configuration**
+```bash
+cp .env.production .env
+# Configure production values
+```
+
+2. **Optimize for Production**
+```bash
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+php artisan optimize
+```
+
+3. **Database Setup**
+```bash
+php artisan migrate --force
+```
+
+
+### Docker Production Build
+
+```dockerfile
+# Use production Dockerfile
+docker build -f Dockerfile.prod -t webai-backend:latest .
+```
