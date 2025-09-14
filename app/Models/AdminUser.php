@@ -38,4 +38,29 @@ class AdminUser extends Authenticatable
         'last_updated' => 'datetime',
         'is_active' => 'boolean',
     ];
+
+    /**
+     * Get the password for the user.
+     * Laravel expects 'password' but our field is 'password_hash'
+     */
+    public function getAuthPassword()
+    {
+        return $this->password_hash;
+    }
+
+    /**
+     * Get the name of the unique identifier for the user.
+     */
+    public function getAuthIdentifierName()
+    {
+        return 'id';
+    }
+
+    /**
+     * Get the unique identifier for the user.
+     */
+    public function getAuthIdentifier()
+    {
+        return $this->getAttribute($this->getAuthIdentifierName());
+    }
 }
