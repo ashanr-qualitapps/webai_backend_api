@@ -9,10 +9,6 @@ return new class extends Migration {
     public function up(): void
     {
         // Add tenant_id columns as nullable first to avoid not-null violations
-        Schema::table('users', function (Blueprint $table) {
-            $table->unsignedBigInteger('tenant_id')->nullable()->after('id');
-        });
-
         Schema::table('admin_users', function (Blueprint $table) {
             $table->unsignedBigInteger('tenant_id')->nullable()->after('id');
         });
@@ -47,7 +43,6 @@ return new class extends Migration {
             $defaultTenantId = $defaultTenant->id;
             
             // Update existing records with default tenant
-            DB::table('users')->whereNull('tenant_id')->update(['tenant_id' => $defaultTenantId]);
             DB::table('admin_users')->whereNull('tenant_id')->update(['tenant_id' => $defaultTenantId]);
             DB::table('personas')->whereNull('tenant_id')->update(['tenant_id' => $defaultTenantId]);
             DB::table('knowledge_base')->whereNull('tenant_id')->update(['tenant_id' => $defaultTenantId]);
@@ -58,11 +53,6 @@ return new class extends Migration {
         }
 
         // Now make columns not nullable and add foreign key constraints
-        Schema::table('users', function (Blueprint $table) {
-            $table->unsignedBigInteger('tenant_id')->nullable(false)->change();
-            $table->foreign('tenant_id')->references('id')->on('tenants')->onDelete('cascade');
-        });
-
         Schema::table('admin_users', function (Blueprint $table) {
             $table->unsignedBigInteger('tenant_id')->nullable(false)->change();
             $table->foreign('tenant_id')->references('id')->on('tenants')->onDelete('cascade');
@@ -102,11 +92,6 @@ return new class extends Migration {
     public function down(): void
     {
         // Drop foreign keys and columns
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropForeign(['tenant_id']);
-            $table->dropColumn('tenant_id');
-        });
-
         Schema::table('admin_users', function (Blueprint $table) {
             $table->dropForeign(['tenant_id']);
             $table->dropColumn('tenant_id');
