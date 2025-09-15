@@ -13,6 +13,11 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Seed tenants first (required for all other models)
+        $this->call([
+            TenantSeeder::class,
+        ]);
+        
         // Seed admin users for authentication testing
         $this->call([
             AdminUserSeeder::class,

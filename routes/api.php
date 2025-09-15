@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\PersonaController;
+use App\Http\Controllers\Api\V1\TenantController;
 
 /*
 |--------------------------------------------------------------------------
@@ -22,6 +23,9 @@ Route::prefix('v1')->middleware(['auth.rate_limit'])->group(function () {
     Route::post('/refresh', [AuthController::class, 'refresh']);
     Route::post('/register', [AuthController::class, 'register']);
     
+    // Tenant registration (for new domains)
+    Route::post('/tenants', [TenantController::class, 'store']);
+    
     // Public persona routes (no authentication required)
     Route::get('/personas', [PersonaController::class, 'index']);
     Route::get('/personas/{id}', [PersonaController::class, 'show']);
@@ -32,6 +36,9 @@ Route::prefix('v1')->middleware(['auth:api'])->group(function () {
     // Authentication endpoints that require token
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
+    
+    // Tenant information
+    Route::get('/tenant/current', [TenantController::class, 'current']);
     
     // Example protected routes with permissions
     Route::middleware(['permission:users.read'])->group(function () {

@@ -9,7 +9,7 @@ return new class extends Migration {
     {
         Schema::create('admin_user_tenant', function (Blueprint $table) {
             $table->unsignedBigInteger('tenant_id');
-            $table->string('admin_user_id');
+            $table->uuid('admin_user_id');
             $table->primary(['tenant_id', 'admin_user_id']);
             $table->foreign('tenant_id')->references('id')->on('tenants')->onDelete('cascade');
             $table->foreign('admin_user_id')->references('id')->on('admin_users')->onDelete('cascade');
