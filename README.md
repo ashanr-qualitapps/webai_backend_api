@@ -126,17 +126,12 @@ docker-compose exec app npm run build
 
 ### Database Connection Details
 
-**For Docker Environment:**
-- **Host:** `db` (internal container network)
-- **Port:** `5432`
-- **Database:** `laravel` (as per .env.docker)
-- **Username:** `laravel`
-- **Password:** `secret`
+
 
 **For External Access:**
 - **Host:** `localhost`
 - **Port:** `5432`
-- **Database:** `webai_db` (as per docker-compose.yml)
+- **Database:** `webai_db` 
 - **Username:** `webai_user`
 - **Password:** `webai_password`
 
