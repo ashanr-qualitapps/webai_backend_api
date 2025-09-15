@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 class CreateChatMessagesTable extends Migration
 {
@@ -15,13 +16,15 @@ class CreateChatMessagesTable extends Migration
             $table->uuid('persona_id')->nullable();
             $table->string('message_type')->nullable();
             $table->text('message_text');
-            $table->json('embedding')->nullable(); // Vector embedding stored as JSON
             $table->timestampTz('created_at')->useCurrent();
 
             $table->foreign('session_id')->references('id')->on('chat_sessions')->onDelete('cascade');
             $table->foreign('snippet_id')->references('id')->on('snippets')->onDelete('set null');
             $table->foreign('persona_id')->references('id')->on('personas')->onDelete('set null');
         });
+
+        // Add vector column using raw SQL
+        DB::statement('ALTER TABLE chat_messages ADD COLUMN embedding vector(1536)');
     }
 
     public function down()

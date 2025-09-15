@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\PersonaController;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,6 +21,10 @@ Route::prefix('v1')->middleware(['auth.rate_limit'])->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/refresh', [AuthController::class, 'refresh']);
     Route::post('/register', [AuthController::class, 'register']);
+    
+    // Public persona routes (no authentication required)
+    Route::get('/personas', [PersonaController::class, 'index']);
+    Route::get('/personas/{id}', [PersonaController::class, 'show']);
 });
 
 // Protected routes (require authentication)
@@ -84,14 +89,12 @@ Route::prefix('v1')->middleware(['auth:api'])->group(function () {
         // Route::post('/chat-sessions', [ChatSessionController::class, 'store']);
     });
     
-    // Persona routes
-    Route::middleware(['permission:personas.read'])->group(function () {
-        // Route::get('/personas', [PersonaController::class, 'index']);
-        // Route::get('/personas/{id}', [PersonaController::class, 'show']);
-    });
-    
-    Route::middleware(['permission:personas.create'])->group(function () {
-        // Route::post('/personas', [PersonaController::class, 'store']);
+    // Persona routes (protected - require authentication and permissions)
+    Route::middleware(['permission:persona:write'])->group(function () {
+        Route::post('/personas', [PersonaController::class, 'store']);
+        Route::put('/personas/{id}', [PersonaController::class, 'update']);
+        Route::patch('/personas/{id}', [PersonaController::class, 'update']);
+        Route::delete('/personas/{id}', [PersonaController::class, 'destroy']);
     });
     
     // Snippet routes
