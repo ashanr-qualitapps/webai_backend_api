@@ -41,7 +41,7 @@ Route::prefix('v1')->middleware(['auth:api'])->group(function () {
     
     Route::middleware(['permission:users.create'])->group(function () {
         // Routes that require 'users.create' permission
-        // Route::post('/admin-users', [AdminUserController::class, 'store']);
+        Route::post('/users', [\App\Http\Controllers\Api\V1\UserController::class, 'store']);
     });
     
     Route::middleware(['permission:users.update'])->group(function () {
@@ -51,7 +51,8 @@ Route::prefix('v1')->middleware(['auth:api'])->group(function () {
     
     Route::middleware(['permission:users.delete'])->group(function () {
         // Routes that require 'users.delete' permission
-        // Route::delete('/admin-users/{id}', [AdminUserController::class, 'destroy']);
+        Route::delete('/users/{id}', [\App\Http\Controllers\Api\V1\UserController::class, 'destroy']);
+        Route::delete('/admin-users/{id}', [\App\Http\Controllers\Api\V1\AdminUserController::class, 'destroy']);
     });
     
     // Admin only routes (wildcard permission)

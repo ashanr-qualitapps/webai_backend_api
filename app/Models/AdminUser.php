@@ -28,6 +28,13 @@ class AdminUser extends Authenticatable
         'is_active',
         'last_updated',
     ];
+    /**
+     * Get the tenants this admin user can access.
+     */
+    public function tenants()
+    {
+        return $this->belongsToMany(Tenant::class, 'admin_user_tenant', 'admin_user_id', 'tenant_id');
+    }
 
     protected $casts = [
         'permissions' => 'array',

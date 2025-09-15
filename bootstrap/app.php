@@ -15,6 +15,12 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'permission' => \App\Http\Middleware\CheckPermission::class,
             'auth.rate_limit' => \App\Http\Middleware\RateLimitAuth::class,
+            'resolve.tenant' => \App\Http\Middleware\ResolveTenant::class,
+        ]);
+        
+        // Add tenant resolution to API middleware group
+        $middleware->group('api', [
+            \App\Http\Middleware\ResolveTenant::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

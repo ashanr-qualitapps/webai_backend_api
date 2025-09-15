@@ -7,11 +7,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Passport\HasApiTokens;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, HasUuids;
+    protected $keyType = 'string';
+    public $incrementing = false;
 
     /**
      * The attributes that are mass assignable.
@@ -22,7 +25,29 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+            'tenant_id',
     ];
+    /**
+     * Get the tenant that owns the user.
+     */
+    public function tenant()
+    {
+        return $this->belongsTo(Tenant::class);
+    }
+
+    /**
+     * The "booted" method of the model.
+     * Applies global scope for tenant_id.
+     */
+    protected static function booted()
+    {
+        static::addGlobalScope('tenant', function ($query) {
+            if (app()->has('currentTenant')) {
+                $tenantId = app('currentTenant')->id;
+                $query->where('tenant_id', $tenantId);
+            }
+        });
+    }
 
     /**
      * The attributes that should be hidden for serialization.

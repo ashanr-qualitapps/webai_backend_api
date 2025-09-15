@@ -24,4 +24,26 @@ class KnowledgeBase extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+        /**
+         * Get the tenant that owns the knowledge base entry.
+         */
+        public function tenant()
+        {
+            return $this->belongsTo(Tenant::class);
+        }
+
+        /**
+         * The "booted" method of the model.
+         * Applies global scope for tenant_id.
+         */
+        protected static function booted()
+        {
+            static::addGlobalScope('tenant', function ($query) {
+                if (app()->has('currentTenant')) {
+                    $tenantId = app('currentTenant')->id;
+                    $query->where('tenant_id', $tenantId);
+                }
+            });
+        }
 }

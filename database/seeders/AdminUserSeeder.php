@@ -15,7 +15,7 @@ class AdminUserSeeder extends Seeder
      */
     public function run(): void
     {
-        AdminUser::create([
+        $superAdmin = AdminUser::create([
             'id' => Str::uuid(),
             'email' => 'admin@webai.com',
             'password_hash' => Hash::make('password123'),
@@ -25,6 +25,10 @@ class AdminUserSeeder extends Seeder
             'created_at' => now(),
             'updated_at' => now(),
         ]);
+
+        // Attach all tenants to super admin
+        $allTenants = \App\Models\Tenant::all();
+        $superAdmin->tenants()->sync($allTenants->pluck('id')->toArray());
 
         AdminUser::create([
             'id' => Str::uuid(),

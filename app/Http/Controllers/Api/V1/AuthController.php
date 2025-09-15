@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Passport\RefreshToken;
 use Laravel\Passport\Token;
+use OpenApi\Attributes as OA;
 
 class AuthController extends Controller
 {
@@ -20,6 +21,77 @@ class AuthController extends Controller
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
+    #[OA\Post(
+        path: "/login",
+        summary: "Admin user login",
+        description: "Authenticate admin user and return access token",
+        tags: ["Authentication"],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ["email", "password"],
+                properties: [
+                    new OA\Property(property: "email", type: "string", format: "email", example: "admin@webai.com"),
+                    new OA\Property(property: "password", type: "string", format: "password", example: "password123")
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "Successful login",
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: "success", type: "boolean", example: true),
+                        new OA\Property(property: "message", type: "string", example: "Login successful"),
+                        new OA\Property(
+                            property: "data",
+                            type: "object",
+                            properties: [
+                                new OA\Property(property: "access_token", type: "string"),
+                                new OA\Property(property: "refresh_token", type: "string"),
+                                new OA\Property(property: "token_type", type: "string", example: "Bearer"),
+                                new OA\Property(property: "expires_in", type: "integer", example: 900),
+                                new OA\Property(
+                                    property: "user",
+                                    type: "object",
+                                    properties: [
+                                        new OA\Property(property: "id", type: "string"),
+                                        new OA\Property(property: "email", type: "string"),
+                                        new OA\Property(property: "full_name", type: "string"),
+                                        new OA\Property(property: "permissions", type: "array", items: new OA\Items(type: "string")),
+                                        new OA\Property(property: "is_active", type: "boolean"),
+                                        new OA\Property(property: "last_login", type: "string", format: "date-time")
+                                    ]
+                                )
+                            ]
+                        )
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 401,
+                description: "Invalid credentials",
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: "success", type: "boolean", example: false),
+                        new OA\Property(property: "message", type: "string", example: "Invalid credentials")
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 422,
+                description: "Validation error",
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: "success", type: "boolean", example: false),
+                        new OA\Property(property: "message", type: "string", example: "Validation error"),
+                        new OA\Property(property: "errors", type: "object")
+                    ]
+                )
+            )
+        ]
+    )]
     public function login(Request $request): \Illuminate\Http\JsonResponse
     {
         $validator = Validator::make($request->all(), [
@@ -35,7 +107,11 @@ class AuthController extends Controller
             ], 422);
         }
 
+        $tenant = app()->has('currentTenant') ? app('currentTenant') : null;
         $user = AdminUser::where('email', $request->email)->first();
+        if ($user && $tenant && !$user->tenants->contains($tenant->id)) {
+            $user = null;
+        }
 
         if (!$user || !Hash::check($request->password, $user->password_hash)) {
             return response()->json([
@@ -86,6 +162,80 @@ class AuthController extends Controller
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
+    #[OA\Post(
+        path: "/register",
+        summary: "Register admin user",
+        description: "Create a new admin user for the current tenant",
+        tags: ["Authentication"],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ["email", "password", "password_confirmation", "full_name"],
+                properties: [
+                    new OA\Property(property: "email", type: "string", format: "email", example: "admin@example.com"),
+                    new OA\Property(property: "password", type: "string", format: "password", example: "password123"),
+                    new OA\Property(property: "password_confirmation", type: "string", format: "password", example: "password123"),
+                    new OA\Property(property: "full_name", type: "string", example: "John Doe"),
+                    new OA\Property(property: "permissions", type: "array", items: new OA\Items(type: "string"), example: ["users.read", "users.create"]),
+                    new OA\Property(property: "metadata", type: "object", example: ["department" => "IT"]),
+                    new OA\Property(property: "is_active", type: "boolean", example: true)
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: "Admin user created successfully",
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: "success", type: "boolean", example: true),
+                        new OA\Property(property: "message", type: "string", example: "Admin user registered successfully"),
+                        new OA\Property(
+                            property: "data",
+                            type: "object",
+                            properties: [
+                                new OA\Property(
+                                    property: "user",
+                                    type: "object",
+                                    properties: [
+                                        new OA\Property(property: "id", type: "string"),
+                                        new OA\Property(property: "email", type: "string"),
+                                        new OA\Property(property: "full_name", type: "string"),
+                                        new OA\Property(property: "permissions", type: "array", items: new OA\Items(type: "string")),
+                                        new OA\Property(property: "is_active", type: "boolean"),
+                                        new OA\Property(property: "created_at", type: "string", format: "date-time"),
+                                        new OA\Property(property: "updated_at", type: "string", format: "date-time")
+                                    ]
+                                )
+                            ]
+                        )
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 422,
+                description: "Validation error",
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: "success", type: "boolean", example: false),
+                        new OA\Property(property: "message", type: "string", example: "Validation error"),
+                        new OA\Property(property: "errors", type: "object")
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 500,
+                description: "Server error",
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: "success", type: "boolean", example: false),
+                        new OA\Property(property: "message", type: "string", example: "Failed to register admin user"),
+                        new OA\Property(property: "error", type: "string")
+                    ]
+                )
+            )
+        ]
+    )]
     public function register(Request $request): \Illuminate\Http\JsonResponse
     {
         $validator = Validator::make($request->all(), [
@@ -107,6 +257,7 @@ class AuthController extends Controller
 
         try {
             // Create new admin user
+            $tenant = app()->has('currentTenant') ? app('currentTenant') : null;
             $adminUser = AdminUser::create([
                 'email' => $request->email,
                 'password_hash' => Hash::make($request->password),
@@ -116,6 +267,9 @@ class AuthController extends Controller
                 'is_active' => $request->is_active ?? true,
                 'last_updated' => now()
             ]);
+            if ($tenant) {
+                $adminUser->tenants()->attach($tenant->id);
+            }
 
             return response()->json([
                 'success' => true,

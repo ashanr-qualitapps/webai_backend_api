@@ -15,4 +15,26 @@ class ChatSession extends Model
     protected $keyType = 'string';
 
     protected $guarded = [];
+
+        /**
+         * Get the tenant that owns the chat session.
+         */
+        public function tenant()
+        {
+            return $this->belongsTo(Tenant::class);
+        }
+
+        /**
+         * The "booted" method of the model.
+         * Applies global scope for tenant_id.
+         */
+        protected static function booted()
+        {
+            static::addGlobalScope('tenant', function ($query) {
+                if (app()->has('currentTenant')) {
+                    $tenantId = app('currentTenant')->id;
+                    $query->where('tenant_id', $tenantId);
+                }
+            });
+        }
 }
