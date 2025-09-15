@@ -10,7 +10,7 @@ WebAI Backend API is a robust, scalable backend service built with Laravel's ele
 ### Key Features
 
 - 🏗️ **Extensible Architecture** - Clean structure ready for feature expansion
-- 🔐 **Secure Authentication** - JWT-based API authentication with role-based permissions
+- 🔐 **Secure Authentication** - Laravel Passport OAuth2 authentication with role-based permissions
 - 🐘 **PostgreSQL Database** - Advanced relational database with optimized schema
 - 🐳 **Docker Support** - Complete containerized development and deployment
 - 📊 **Real-time Processing** - Queue-based background job processing
@@ -26,7 +26,7 @@ WebAI Backend API is a robust, scalable backend service built with Laravel's ele
 - **Database:** PostgreSQL 15+
 - **Caching:** Redis
 - **Queue System:** Laravel Queues with Redis driver
-- **Authentication:** JWT (JSON Web Tokens)
+- **Authentication:** Laravel Passport (OAuth2)
 - **Containerization:** Docker \& Docker Compose
 - **Testing:** PHPUnit with Feature \& Unit tests
 - **Documentation:** Swagger/OpenAPI 3.0
@@ -95,6 +95,9 @@ docker-compose exec app composer install
 
 # Generate application key (if not already set)
 docker-compose exec app php artisan key:generate
+
+# Install Laravel Passport (OAuth2 server)
+docker-compose exec app php artisan passport:install
 
 # Run database migrations
 docker-compose exec app php artisan migrate
@@ -182,6 +185,12 @@ docker-compose exec app php artisan make:controller Api/V1/ExampleController
 
 # Generate new model
 docker-compose exec app php artisan make:model Example -m
+
+# Laravel Passport commands
+docker-compose exec app php artisan passport:install       # Install OAuth2 server
+docker-compose exec app php artisan passport:keys          # Regenerate encryption keys
+docker-compose exec app php artisan passport:client        # Create OAuth2 client
+docker-compose exec app php artisan passport:purge         # Delete revoked/expired tokens
 ```
 
 #### Frontend Development
@@ -297,12 +306,22 @@ docker-compose exec app php artisan config:cache
 
 ### Authentication
 
-The API uses JWT tokens for authentication. Include the token in your requests:
+The API uses **Laravel Passport** (OAuth2) for secure authentication. Include the Bearer token in your requests:
 
 ```bash
-curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+curl -H "Authorization: Bearer YOUR_OAUTH_TOKEN" \
      -H "Content-Type: application/json" \
-     http://localhost:9000/api/protected-endpoint
+     http://localhost:8000/api/protected-endpoint
+```
+
+**Setup Passport after installation:**
+```bash
+# Generate OAuth2 encryption keys and client credentials
+docker-compose exec app php artisan passport:install
+
+# This will output:
+# - Personal access client created successfully
+# - Password grant client created successfully
 ```
 
 
@@ -479,6 +498,8 @@ cd webai_backend_api
 cp .env.docker .env
 docker-compose up --build -d
 docker-compose exec app composer install
+docker-compose exec app php artisan key:generate
+docker-compose exec app php artisan passport:install
 docker-compose exec app php artisan migrate --seed
 
 # Daily Development
