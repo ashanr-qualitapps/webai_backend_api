@@ -21,7 +21,7 @@ WebAI Backend API is a robust, scalable backend service built with Laravel's ele
 
 ## 🛠️ Technology Stack
 
-- **Backend Framework:** Laravel 10.x
+- **Backend Framework:** Laravel 12.x
 - **Language:** PHP 8.2+
 - **Database:** PostgreSQL 15+
 - **Caching:** Redis

@@ -19,10 +19,7 @@ abstract class TestCase extends BaseTestCase
         parent::setUp();
         
         // Run migrations for test database
-        $this->artisan('migrate', ['--database' => 'testing']);
-        
-        // Install Passport for testing
-        $this->artisan('passport:install', ['--uuids' => true]);
+        $this->artisan('migrate');
     }
 
     /**
