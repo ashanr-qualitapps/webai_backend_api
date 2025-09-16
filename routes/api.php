@@ -40,24 +40,24 @@ Route::prefix('v1')->middleware(['auth:api'])->group(function () {
     // Tenant information
     Route::get('/tenant/current', [TenantController::class, 'current']);
     
-    // Example protected routes with permissions
-    Route::middleware(['permission:users.read'])->group(function () {
-        // Routes that require 'users.read' permission
+    // Example protected routes with both permission and scope middleware
+    Route::middleware(['permission:users.read', 'scope:users:read'])->group(function () {
+        // Routes that require both 'users.read' permission AND 'users:read' scope
         // Route::get('/admin-users', [AdminUserController::class, 'index']);
     });
     
-    Route::middleware(['permission:users.create'])->group(function () {
-        // Routes that require 'users.create' permission
+    Route::middleware(['permission:users.create', 'scope:users:write,write'])->group(function () {
+        // Routes that require 'users.create' permission AND ('users:write' OR 'write') scope
         // No normal user endpoints - using admin users only
     });
     
-    Route::middleware(['permission:users.update'])->group(function () {
-        // Routes that require 'users.update' permission
+    Route::middleware(['permission:users.update', 'scope:users:write,write'])->group(function () {
+        // Routes that require 'users.update' permission AND ('users:write' OR 'write') scope
         // Route::put('/admin-users/{id}', [AdminUserController::class, 'update']);
     });
     
-    Route::middleware(['permission:users.delete'])->group(function () {
-        // Routes that require 'users.delete' permission
+    Route::middleware(['permission:users.delete', 'scope:users:delete,delete'])->group(function () {
+        // Routes that require 'users.delete' permission AND ('users:delete' OR 'delete') scope
         Route::delete('/admin-users/{id}', [\App\Http\Controllers\Api\V1\AdminUserController::class, 'destroy']);
     });
     
@@ -68,26 +68,26 @@ Route::prefix('v1')->middleware(['auth:api'])->group(function () {
         // Route::get('/system/stats', [SystemController::class, 'stats']);
     });
     
-    // Knowledge base routes
-    Route::middleware(['permission:knowledge.read'])->group(function () {
+    // Knowledge base routes with both permission and scope checks
+    Route::middleware(['permission:knowledge.read', 'scope:knowledge:read,read'])->group(function () {
         // Route::get('/knowledge-base', [KnowledgeBaseController::class, 'index']);
         // Route::get('/knowledge-base/{id}', [KnowledgeBaseController::class, 'show']);
     });
     
-    Route::middleware(['permission:knowledge.create'])->group(function () {
+    Route::middleware(['permission:knowledge.create', 'scope:knowledge:write,write'])->group(function () {
         // Route::post('/knowledge-base', [KnowledgeBaseController::class, 'store']);
     });
     
-    Route::middleware(['permission:knowledge.update'])->group(function () {
+    Route::middleware(['permission:knowledge.update', 'scope:knowledge:write,write'])->group(function () {
         // Route::put('/knowledge-base/{id}', [KnowledgeBaseController::class, 'update']);
     });
     
-    Route::middleware(['permission:knowledge.delete'])->group(function () {
+    Route::middleware(['permission:knowledge.delete', 'scope:knowledge:delete,delete'])->group(function () {
         // Route::delete('/knowledge-base/{id}', [KnowledgeBaseController::class, 'destroy']);
     });
     
-    // Chat session routes
-    Route::middleware(['permission:chat.read'])->group(function () {
+    // Chat session routes with both permission and scope checks
+    Route::middleware(['permission:chat.read', 'scope:chat:read,read'])->group(function () {
         // Route::get('/chat-sessions', [ChatSessionController::class, 'index']);
         // Route::get('/chat-sessions/{id}', [ChatSessionController::class, 'show']);
     });

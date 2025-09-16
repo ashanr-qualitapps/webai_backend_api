@@ -127,8 +127,9 @@ class AuthController extends Controller
             ], 403);
         }
 
-        // Create token with scopes
-        $token = $user->createToken('API Token');
+        // Create token with scopes based on user permissions
+        $scopes = $this->mapPermissionsToScopes($user->permissions);
+        $token = $user->createToken('API Token', $scopes);
         
         // Update last login
         $user->update([
@@ -359,8 +360,9 @@ class AuthController extends Controller
             $accessToken->revoke();
             $refreshToken->revoke();
 
-            // Create new token
-            $newToken = $user->createToken('API Token');
+            // Create new token with same scopes as before
+            $scopes = $this->mapPermissionsToScopes($user->permissions);
+            $newToken = $user->createToken('API Token', $scopes);
 
             return response()->json([
                 'success' => true,
@@ -463,5 +465,166 @@ class AuthController extends Controller
                 'error' => config('app.debug') ? $e->getMessage() : 'Internal server error'
             ], 500);
         }
+    }
+
+    /**
+     * Map JSON permissions to OAuth2 scopes
+     *
+     * @param mixed $permissions
+     * @return array
+     */
+    private function mapPermissionsToScopes($permissions): array
+    {
+        if (!$permissions || empty($permissions)) {
+            return ['read']; // Default scope
+        }
+
+        $permissions = is_array($permissions) ? $permissions : json_decode($permissions, true);
+        if (!is_array($permissions)) {
+            return ['read']; // Default scope
+        }
+
+        $scopes = ['read']; // Always include basic read access
+
+        // Map super admin permissions
+        if (in_array('*', $permissions) || in_array('admin.*', $permissions)) {
+            return [
+                'read', 'write', 'delete',
+                'users:read', 'users:write', 'users:delete',
+                'personas:read', 'personas:write', 'personas:delete',
+                'chat:read', 'chat:write', 'chat:delete',
+                'knowledge:read', 'knowledge:write', 'knowledge:delete',
+                'snippets:read', 'snippets:write', 'snippets:delete',
+                'tenants:read', 'tenants:write', 'tenants:delete',
+                'super-admin'
+            ];
+        }
+
+        // Map specific permissions to scopes
+        foreach ($permissions as $permission) {
+            switch ($permission) {
+                // User permissions
+                case 'users.read':
+                case 'users.*':
+                    $scopes[] = 'users:read';
+                    if ($permission === 'users.*') {
+                        $scopes = array_merge($scopes, ['users:write', 'users:delete']);
+                    }
+                    break;
+                case 'users.create':
+                case 'users.update':
+                case 'users.write':
+                    $scopes[] = 'users:write';
+                    $scopes[] = 'write';
+                    break;
+                case 'users.delete':
+                    $scopes[] = 'users:delete';
+                    $scopes[] = 'delete';
+                    break;
+
+                // Persona permissions
+                case 'personas.read':
+                case 'personas.*':
+                    $scopes[] = 'personas:read';
+                    if ($permission === 'personas.*') {
+                        $scopes = array_merge($scopes, ['personas:write', 'personas:delete']);
+                    }
+                    break;
+                case 'personas.create':
+                case 'personas.update':
+                case 'personas.write':
+                    $scopes[] = 'personas:write';
+                    $scopes[] = 'write';
+                    break;
+                case 'personas.delete':
+                    $scopes[] = 'personas:delete';
+                    $scopes[] = 'delete';
+                    break;
+
+                // Chat permissions
+                case 'chat.read':
+                case 'chat.*':
+                    $scopes[] = 'chat:read';
+                    if ($permission === 'chat.*') {
+                        $scopes = array_merge($scopes, ['chat:write', 'chat:delete']);
+                    }
+                    break;
+                case 'chat.create':
+                case 'chat.update':
+                case 'chat.write':
+                    $scopes[] = 'chat:write';
+                    $scopes[] = 'write';
+                    break;
+                case 'chat.delete':
+                    $scopes[] = 'chat:delete';
+                    $scopes[] = 'delete';
+                    break;
+
+                // Knowledge base permissions
+                case 'knowledge.read':
+                case 'knowledge.*':
+                    $scopes[] = 'knowledge:read';
+                    if ($permission === 'knowledge.*') {
+                        $scopes = array_merge($scopes, ['knowledge:write', 'knowledge:delete']);
+                    }
+                    break;
+                case 'knowledge.create':
+                case 'knowledge.update':
+                case 'knowledge.write':
+                    $scopes[] = 'knowledge:write';
+                    $scopes[] = 'write';
+                    break;
+                case 'knowledge.delete':
+                    $scopes[] = 'knowledge:delete';
+                    $scopes[] = 'delete';
+                    break;
+
+                // Snippet permissions
+                case 'snippets.read':
+                case 'snippets.*':
+                    $scopes[] = 'snippets:read';
+                    if ($permission === 'snippets.*') {
+                        $scopes = array_merge($scopes, ['snippets:write', 'snippets:delete']);
+                    }
+                    break;
+                case 'snippets.create':
+                case 'snippets.update':
+                case 'snippets.write':
+                    $scopes[] = 'snippets:write';
+                    $scopes[] = 'write';
+                    break;
+                case 'snippets.delete':
+                    $scopes[] = 'snippets:delete';
+                    $scopes[] = 'delete';
+                    break;
+
+                // Tenant permissions
+                case 'tenants.read':
+                case 'tenants.*':
+                    $scopes[] = 'tenants:read';
+                    if ($permission === 'tenants.*') {
+                        $scopes = array_merge($scopes, ['tenants:write', 'tenants:delete']);
+                    }
+                    break;
+                case 'tenants.create':
+                case 'tenants.update':
+                case 'tenants.write':
+                    $scopes[] = 'tenants:write';
+                    $scopes[] = 'write';
+                    break;
+                case 'tenants.delete':
+                    $scopes[] = 'tenants:delete';
+                    $scopes[] = 'delete';
+                    break;
+
+                // Admin permissions
+                case 'admin':
+                case 'admin.read':
+                    $scopes[] = 'admin';
+                    break;
+            }
+        }
+
+        return array_unique($scopes);
     }
 }

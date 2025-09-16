@@ -21,10 +21,10 @@ class TenantController extends Controller
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
-                required: ["name", "domain"],
+                required: ["name"],
                 properties: [
                     new OA\Property(property: "name", type: "string", example: "Acme Corporation"),
-                    new OA\Property(property: "domain", type: "string", example: "acme.com"),
+                    new OA\Property(property: "domain", type: "string", example: "acme.com", description: "Optional - for backward compatibility"),
                     new OA\Property(property: "settings", type: "object", example: ["theme" => "dark", "features" => ["chat", "ai"]]),
                     new OA\Property(property: "is_active", type: "boolean", example: true)
                 ]
@@ -69,7 +69,7 @@ class TenantController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'domain' => 'required|string|unique:tenants,domain|max:255',
+            'domain' => 'nullable|string|unique:tenants,domain|max:255', // Made domain optional
             'settings' => 'nullable|array',
             'is_active' => 'nullable|boolean'
         ]);
@@ -87,12 +87,22 @@ class TenantController extends Controller
             'domain' => $request->domain,
             'settings' => $request->settings ?? [],
             'is_active' => $request->is_active ?? true,
+            // app_key is automatically generated in the model's boot method
         ]);
 
         return response()->json([
             'success' => true,
             'message' => 'Tenant created successfully',
-            'data' => $tenant
+            'data' => [
+                'id' => $tenant->id,
+                'name' => $tenant->name,
+                'app_key' => $tenant->app_key, // Include app_key in response
+                'domain' => $tenant->domain,
+                'is_active' => $tenant->is_active,
+                'settings' => $tenant->settings,
+                'created_at' => $tenant->created_at,
+                'updated_at' => $tenant->updated_at,
+            ]
         ], 201);
     }
     
@@ -102,7 +112,7 @@ class TenantController extends Controller
     #[OA\Get(
         path: "/tenant/current",
         summary: "Get current tenant",
-        description: "Get information about the current tenant based on domain",
+        description: "Get information about the current tenant based on app_key or domain",
         tags: ["Tenants"],
         responses: [
             new OA\Response(
@@ -117,6 +127,7 @@ class TenantController extends Controller
                             properties: [
                                 new OA\Property(property: "id", type: "integer"),
                                 new OA\Property(property: "name", type: "string"),
+                                new OA\Property(property: "app_key", type: "string", format: "uuid", description: "Unique application key for tenant identification"),
                                 new OA\Property(property: "domain", type: "string"),
                                 new OA\Property(property: "is_active", type: "boolean"),
                                 new OA\Property(property: "settings", type: "object")
@@ -150,7 +161,16 @@ class TenantController extends Controller
         
         return response()->json([
             'success' => true,
-            'data' => $tenant
+            'data' => [
+                'id' => $tenant->id,
+                'name' => $tenant->name,
+                'app_key' => $tenant->app_key, // Include app_key in response
+                'domain' => $tenant->domain,
+                'is_active' => $tenant->is_active,
+                'settings' => $tenant->settings,
+                'created_at' => $tenant->created_at,
+                'updated_at' => $tenant->updated_at,
+            ]
         ]);
     }
 }

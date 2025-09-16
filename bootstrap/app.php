@@ -16,6 +16,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => \App\Http\Middleware\CheckPermission::class,
             'auth.rate_limit' => \App\Http\Middleware\RateLimitAuth::class,
             'resolve.tenant' => \App\Http\Middleware\ResolveTenant::class,
+            'scope' => \App\Http\Middleware\CheckScope::class,
+            'scopes' => \App\Http\Middleware\CheckScopes::class,
         ]);
         
         // Add tenant resolution to API middleware group
