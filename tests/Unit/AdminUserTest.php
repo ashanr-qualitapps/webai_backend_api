@@ -263,4 +263,179 @@ class AdminUserTest extends TestCase
         $this->assertNotNull($user->fresh()->last_login);
         $this->assertInstanceOf(\Illuminate\Support\Carbon::class, $user->fresh()->last_login);
     }
+
+    /**
+     * Test AdminUser can create OAuth2 tokens with scopes
+     */
+    public function test_admin_user_can_create_oauth2_tokens_with_scopes()
+    {
+        $user = AdminUser::factory()->create();
+        $scopes = ['read', 'write', 'users:read'];
+
+        $this->assertTrue(method_exists($user, 'createToken'));
+        
+        // Create a token with specific scopes
+        $token = $user->createToken('Test Token', $scopes);
+        
+        $this->assertNotNull($token);
+        $this->assertNotEmpty($token->accessToken);
+    }
+
+    /**
+     * Test AdminUser permission-based scope mapping
+     */
+    public function test_admin_user_permission_based_scope_mapping()
+    {
+        // Test user with specific permissions
+        $user1 = AdminUser::factory()->create([
+            'permissions' => ['users.read', 'users.create']
+        ]);
+        
+        $this->assertIsArray($user1->permissions);
+        $this->assertContains('users.read', $user1->permissions);
+        $this->assertContains('users.create', $user1->permissions);
+
+        // Test user with wildcard permissions
+        $user2 = AdminUser::factory()->create([
+            'permissions' => ['users.*']
+        ]);
+        
+        $this->assertIsArray($user2->permissions);
+        $this->assertContains('users.*', $user2->permissions);
+
+        // Test super admin user
+        $user3 = AdminUser::factory()->create([
+            'permissions' => ['*']
+        ]);
+        
+        $this->assertIsArray($user3->permissions);
+        $this->assertContains('*', $user3->permissions);
+    }
+
+    /**
+     * Test AdminUser with complex permission structures
+     */
+    public function test_admin_user_with_complex_permission_structures()
+    {
+        $complexPermissions = [
+            'users.read',
+            'users.create',
+            'personas.*',
+            'chat.read',
+            'knowledge.*',
+            'snippets.delete'
+        ];
+
+        $user = AdminUser::factory()->create([
+            'permissions' => $complexPermissions
+        ]);
+
+        $this->assertEquals($complexPermissions, $user->permissions);
+        $this->assertCount(6, $user->permissions);
+        
+        // Verify it can be serialized/deserialized properly
+        $user = $user->fresh();
+        $this->assertEquals($complexPermissions, $user->permissions);
+    }
+
+    /**
+     * Test AdminUser tenant relationships
+     */
+    public function test_admin_user_tenant_relationships()
+    {
+        $user = AdminUser::factory()->create();
+        
+        // Check if the user has a tenants relationship method
+        $this->assertTrue(method_exists($user, 'tenants'));
+        
+        // The relationship should return a collection (even if empty)
+        $tenants = $user->tenants;
+        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Collection::class, $tenants);
+    }
+
+    /**
+     * Test AdminUser with empty permissions defaults to array
+     */
+    public function test_admin_user_with_empty_permissions_defaults_to_array()
+    {
+        $user = AdminUser::factory()->create([
+            'permissions' => null
+        ]);
+
+        // Should cast null to empty array
+        $this->assertIsArray($user->permissions);
+        $this->assertEmpty($user->permissions);
+
+        // Test with explicit empty array
+        $user2 = AdminUser::factory()->create([
+            'permissions' => []
+        ]);
+
+        $this->assertIsArray($user2->permissions);
+        $this->assertEmpty($user2->permissions);
+    }
+
+    /**
+     * Test AdminUser metadata with OAuth-related data
+     */
+    public function test_admin_user_metadata_with_oauth_related_data()
+    {
+        $metadata = [
+            'oauth_scopes' => ['read', 'write', 'users:read'],
+            'preferred_scopes' => ['users:read', 'personas:write'],
+            'last_token_created' => '2025-09-15 10:00:00',
+            'api_usage_count' => 150
+        ];
+
+        $user = AdminUser::factory()->create([
+            'metadata' => $metadata
+        ]);
+
+        $this->assertEquals($metadata, $user->metadata);
+        $this->assertIsArray($user->metadata);
+        $this->assertEquals(['read', 'write', 'users:read'], $user->metadata['oauth_scopes']);
+    }
+
+    /**
+     * Test AdminUser authentication with OAuth2 context
+     */
+    public function test_admin_user_authentication_with_oauth2_context()
+    {
+        $user = AdminUser::factory()->create([
+            'email' => 'oauth@test.com',
+            'password_hash' => \Illuminate\Support\Facades\Hash::make('password123'),
+            'permissions' => ['users.read', 'chat.*'],
+            'is_active' => true
+        ]);
+
+        // Verify auth identifier methods work correctly
+        $this->assertEquals($user->id, $user->getAuthIdentifier());
+        $this->assertEquals('id', $user->getAuthIdentifierName());
+        
+        // Verify password verification works
+        $this->assertTrue(\Illuminate\Support\Facades\Hash::check('password123', $user->getAuthPassword()));
+        $this->assertFalse(\Illuminate\Support\Facades\Hash::check('wrongpassword', $user->getAuthPassword()));
+    }
+
+    /**
+     * Test AdminUser last_updated timestamp functionality
+     */
+    public function test_admin_user_last_updated_timestamp_functionality()
+    {
+        $user = AdminUser::factory()->create([
+            'last_updated' => null
+        ]);
+
+        $this->assertNull($user->last_updated);
+
+        // Update the user and verify last_updated is set
+        $user->update([
+            'last_updated' => now(),
+            'metadata' => ['test' => 'value']
+        ]);
+
+        $updatedUser = $user->fresh();
+        $this->assertNotNull($updatedUser->last_updated);
+        $this->assertInstanceOf(\Illuminate\Support\Carbon::class, $updatedUser->last_updated);
+    }
 }

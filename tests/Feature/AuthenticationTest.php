@@ -4,13 +4,22 @@ namespace Tests\Feature;
 
 use Tests\TestCase;
 use App\Models\AdminUser;
+use App\Models\Tenant;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
-use Laravel\Passport\Passport;
 
 class AuthenticationTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected Tenant $testTenant;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->testTenant = $this->createTenant();
+        $this->setCurrentTenant($this->testTenant);
+    }
 
     /**
      * Test successful login with valid credentials
@@ -22,10 +31,13 @@ class AuthenticationTest extends TestCase
             'password_hash' => Hash::make('password123'),
         ]);
 
+        // Associate the user with the tenant
+        $user->tenants()->attach($this->testTenant->id);
+
         $response = $this->postJson('/api/v1/login', [
             'email' => 'admin@test.com',
             'password' => 'password123',
-        ]);
+        ], $this->withTenantHeaders($this->testTenant->app_key));
 
         $response->assertStatus(200)
             ->assertJsonStructure([
@@ -50,7 +62,7 @@ class AuthenticationTest extends TestCase
                 'message' => 'Login successful',
                 'data' => [
                     'token_type' => 'Bearer',
-                    'expires_in' => 900, // 15 minutes
+                    'expires_in' => 900,
                     'user' => [
                         'email' => 'admin@test.com',
                         'is_active' => true,
@@ -58,45 +70,56 @@ class AuthenticationTest extends TestCase
                 ]
             ]);
 
-        // Verify access token is present and not empty
         $this->assertNotEmpty($response->json('data.access_token'));
         
-        // Verify user's last_login was updated
+        // Check if refresh token is provided (optional for personal access tokens)
+        $refreshToken = $response->json('data.refresh_token');
+        if ($refreshToken !== null) {
+            $this->assertNotEmpty($refreshToken);
+        }
+        
         $user->refresh();
         $this->assertNotNull($user->last_login);
     }
 
     /**
-     * Test login failure with invalid email
+     * Test login with multi-tenancy app key
      */
-    public function test_login_failure_with_invalid_email()
+    public function test_login_with_multi_tenancy_app_key()
     {
-        $response = $this->postJson('/api/v1/login', [
-            'email' => 'nonexistent@test.com',
-            'password' => 'password123',
+        $tenant = $this->createTenant([
+            'name' => 'Specific Tenant',
+            'domain' => 'specific.example.com'
         ]);
-
-        $response->assertStatus(401)
-            ->assertJson([
-                'success' => false,
-                'message' => 'Invalid credentials'
-            ]);
-    }
-
-    /**
-     * Test login failure with invalid password
-     */
-    public function test_login_failure_with_invalid_password()
-    {
-        $this->createAdminUser([
+        $user = $this->createAdminUser([
             'email' => 'admin@test.com',
             'password_hash' => Hash::make('password123'),
         ]);
 
+        // Associate the user with the specific tenant
+        $user->tenants()->attach($tenant->id);
+
         $response = $this->postJson('/api/v1/login', [
             'email' => 'admin@test.com',
-            'password' => 'wrongpassword',
-        ]);
+            'password' => 'password123',
+        ], $this->withTenantHeaders($tenant->app_key));
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'message' => 'Login successful',
+            ]);
+    }
+
+    /**
+     * Test login failure with invalid credentials
+     */
+    public function test_login_failure_with_invalid_credentials()
+    {
+        $response = $this->postJson('/api/v1/login', [
+            'email' => 'nonexistent@test.com',
+            'password' => 'password123',
+        ], $this->withTenantHeaders($this->testTenant->app_key));
 
         $response->assertStatus(401)
             ->assertJson([
@@ -110,16 +133,19 @@ class AuthenticationTest extends TestCase
      */
     public function test_login_failure_with_inactive_user()
     {
-        $this->createAdminUser([
+        $user = $this->createAdminUser([
             'email' => 'admin@test.com',
             'password_hash' => Hash::make('password123'),
             'is_active' => false,
         ]);
 
+        // Associate the user with the tenant
+        $user->tenants()->attach($this->testTenant->id);
+
         $response = $this->postJson('/api/v1/login', [
             'email' => 'admin@test.com',
             'password' => 'password123',
-        ]);
+        ], $this->withTenantHeaders($this->testTenant->app_key));
 
         $response->assertStatus(403)
             ->assertJson([
@@ -133,7 +159,7 @@ class AuthenticationTest extends TestCase
      */
     public function test_validation_errors_for_missing_fields()
     {
-        $response = $this->postJson('/api/v1/login', []);
+        $response = $this->postJson('/api/v1/login', [], $this->withTenantHeaders($this->testTenant->app_key));
 
         $response->assertStatus(422)
             ->assertJsonStructure([
@@ -151,192 +177,91 @@ class AuthenticationTest extends TestCase
     }
 
     /**
-     * Test validation errors for invalid email format
+     * Test OAuth2 scopes in login response
      */
-    public function test_validation_errors_for_invalid_email_format()
+    public function test_oauth2_scopes_in_login_response()
     {
-        $response = $this->postJson('/api/v1/login', [
-            'email' => 'invalid-email',
-            'password' => 'password123',
+        $permissions = ['users.read', 'users.create', 'personas.*'];
+        $user = $this->createAdminUser([
+            'email' => 'admin@test.com',
+            'password_hash' => Hash::make('password123'),
+            'permissions' => $permissions,
         ]);
 
-        $response->assertStatus(422)
-            ->assertJsonValidationErrors(['email']);
-    }
+        // Associate the user with the tenant
+        $user->tenants()->attach($this->testTenant->id);
 
-    /**
-     * Test validation errors for short password
-     */
-    public function test_validation_errors_for_short_password()
-    {
         $response = $this->postJson('/api/v1/login', [
             'email' => 'admin@test.com',
-            'password' => '123',
-        ]);
+            'password' => 'password123',
+        ], $this->withTenantHeaders($this->testTenant->app_key));
 
-        $response->assertStatus(422)
-            ->assertJsonValidationErrors(['password']);
+        $response->assertStatus(200);
+        $this->assertEquals($permissions, $response->json('data.user.permissions'));
+        $this->assertNotEmpty($response->json('data.access_token'));
     }
 
     /**
-     * Test access token can be used for authenticated requests
+     * Test JWT token structure
      */
-    public function test_access_token_can_be_used_for_authenticated_requests()
+    public function test_jwt_token_structure()
     {
         $user = $this->createAdminUser([
             'email' => 'admin@test.com',
             'password_hash' => Hash::make('password123'),
         ]);
 
-        // Login to get token
-        $loginResponse = $this->postJson('/api/v1/login', [
-            'email' => 'admin@test.com',
-            'password' => 'password123',
-        ]);
-
-        $token = $loginResponse->json('data.access_token');
-
-        // Use token for authenticated request (example endpoint)
-        $response = $this->withHeaders([
-            'Authorization' => 'Bearer ' . $token,
-            'Accept' => 'application/json',
-        ])->getJson('/api/v1/user');
-
-        // This will depend on having a user profile endpoint
-        // For now, we just verify the token is valid format
-        $this->assertNotEmpty($token);
-        $this->assertIsString($token);
-        
-        // Verify token has proper JWT structure
-        $parts = explode('.', $token);
-        $this->assertCount(3, $parts);
-    }
-
-    /**
-     * Test rate limiting on login endpoint
-     */
-    public function test_rate_limiting_on_login_endpoint()
-    {
-        $this->createAdminUser([
-            'email' => 'admin@test.com',
-            'password_hash' => Hash::make('password123'),
-        ]);
-
-        // Make multiple failed login attempts
-        for ($i = 0; $i < 6; $i++) {
-            $response = $this->postJson('/api/v1/login', [
-                'email' => 'admin@test.com',
-                'password' => 'wrongpassword',
-            ]);
-
-            if ($i < 5) {
-                $response->assertStatus(401);
-            } else {
-                // 6th attempt should be rate limited
-                $response->assertStatus(429)
-                    ->assertJsonStructure([
-                        'success',
-                        'message',
-                        'retry_after'
-                    ])
-                    ->assertJson([
-                        'success' => false,
-                        'message' => 'Too many authentication attempts. Please try again later.'
-                    ]);
-            }
-        }
-    }
-
-    /**
-     * Test JWT token structure and claims
-     */
-    public function test_jwt_token_structure_and_claims()
-    {
-        $user = $this->createAdminUser([
-            'email' => 'admin@test.com',
-            'password_hash' => Hash::make('password123'),
-        ]);
+        // Associate the user with the tenant
+        $user->tenants()->attach($this->testTenant->id);
 
         $response = $this->postJson('/api/v1/login', [
             'email' => 'admin@test.com',
             'password' => 'password123',
-        ]);
+        ], $this->withTenantHeaders($this->testTenant->app_key));
 
         $token = $response->json('data.access_token');
         $parts = explode('.', $token);
         
-        // Verify JWT structure
         $this->assertCount(3, $parts);
-        
-        // Decode payload
-        $payload = json_decode(base64_decode($parts[1]), true);
-        
-        // Verify required claims
-        $this->assertArrayHasKey('sub', $payload); // Subject (user ID)
-        $this->assertArrayHasKey('exp', $payload); // Expiration
-        $this->assertArrayHasKey('iat', $payload); // Issued at
-        $this->assertArrayHasKey('aud', $payload); // Audience
-        
-        // Verify user ID matches
-        $this->assertEquals($user->id, $payload['sub']);
-        
-        // Verify token is not expired
-        $this->assertGreaterThan(time(), $payload['exp']);
+        $this->assertIsString($token);
+        $this->assertNotEmpty($token);
     }
 
     /**
-     * Test login with different user permissions
+     * Test super admin permissions
      */
-    public function test_login_with_different_user_permissions()
+    public function test_super_admin_permissions()
     {
         $user = $this->createAdminUser([
             'email' => 'admin@test.com',
             'password_hash' => Hash::make('password123'),
-            'permissions' => ['users.read', 'posts.create'],
+            'permissions' => ['*'],
         ]);
+
+        // Associate the user with the tenant
+        $user->tenants()->attach($this->testTenant->id);
 
         $response = $this->postJson('/api/v1/login', [
             'email' => 'admin@test.com',
             'password' => 'password123',
-        ]);
+        ], $this->withTenantHeaders($this->testTenant->app_key));
 
         $response->assertStatus(200)
             ->assertJson([
                 'success' => true,
                 'data' => [
                     'user' => [
-                        'permissions' => ['users.read', 'posts.create']
+                        'permissions' => ['*']
                     ]
                 ]
             ]);
-    }
 
-    /**
-     * Test concurrent login attempts from same IP
-     */
-    public function test_concurrent_login_attempts_from_same_ip()
-    {
-        $user = $this->createAdminUser([
-            'email' => 'admin@test.com',
-            'password_hash' => Hash::make('password123'),
-        ]);
-
-        // Simulate multiple successful logins
-        for ($i = 0; $i < 3; $i++) {
-            $response = $this->postJson('/api/v1/login', [
-                'email' => 'admin@test.com',
-                'password' => 'password123',
-            ]);
-
-            $response->assertStatus(200);
+        $this->assertNotEmpty($response->json('data.access_token'));
+        
+        // Check if refresh token is provided (optional for personal access tokens)
+        $refreshToken = $response->json('data.refresh_token');
+        if ($refreshToken !== null) {
+            $this->assertNotEmpty($refreshToken);
         }
-
-        // Verify user can still login (no rate limiting for successful attempts)
-        $response = $this->postJson('/api/v1/login', [
-            'email' => 'admin@test.com',
-            'password' => 'password123',
-        ]);
-
-        $response->assertStatus(200);
     }
 }

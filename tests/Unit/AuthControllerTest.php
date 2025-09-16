@@ -23,10 +23,112 @@ class AuthControllerTest extends TestCase
     }
 
     /**
-     * Test login method with valid credentials
+     * Test login method with valid credentials and scope mapping
      */
-    public function test_login_method_with_valid_credentials()
+    public function test_login_method_with_valid_credentials_and_scope_mapping()
     {
+        $permissions = ['users.read', 'users.create', 'personas.*'];
+        $user = $this->createAdminUser([
+            'email' => 'test@example.com',
+            'password_hash' => Hash::make('password123'),
+            'permissions' => $permissions,
+        ]);
+
+        $request = new Request([
+            'email' => 'test@example.com',
+            'password' => 'password123',
+        ]);
+
+        $response = $this->controller->login($request);
+
+        $this->assertEquals(200, $response->getStatusCode());
+        
+        $data = $response->getData(true);
+        $this->assertTrue($data['success']);
+        $this->assertEquals('Login successful', $data['message']);
+        $this->assertArrayHasKey('access_token', $data['data']);
+        $this->assertArrayHasKey('refresh_token', $data['data']);
+        $this->assertArrayHasKey('user', $data['data']);
+        $this->assertEquals('test@example.com', $data['data']['user']['email']);
+        $this->assertEquals($permissions, $data['data']['user']['permissions']);
+    }
+
+    /**
+     * Test login method creates token with proper expiration
+     */
+    public function test_login_method_creates_token_with_proper_expiration()
+    {
+        $user = $this->createAdminUser([
+            'email' => 'test@example.com',
+            'password_hash' => Hash::make('password123'),
+        ]);
+
+        $request = new Request([
+            'email' => 'test@example.com',
+            'password' => 'password123',
+        ]);
+
+        $response = $this->controller->login($request);
+        $data = $response->getData(true);
+
+        $this->assertEquals(900, $data['data']['expires_in']); // 15 minutes
+        $this->assertEquals('Bearer', $data['data']['token_type']);
+    }
+
+    /**
+     * Test login method with super admin permissions
+     */
+    public function test_login_method_with_super_admin_permissions()
+    {
+        $user = $this->createAdminUser([
+            'email' => 'test@example.com',
+            'password_hash' => Hash::make('password123'),
+            'permissions' => ['*'],
+        ]);
+
+        $request = new Request([
+            'email' => 'test@example.com',
+            'password' => 'password123',
+        ]);
+
+        $response = $this->controller->login($request);
+        $data = $response->getData(true);
+
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(['*'], $data['data']['user']['permissions']);
+    }
+
+    /**
+     * Test login method with admin wildcard permissions
+     */
+    public function test_login_method_with_admin_wildcard_permissions()
+    {
+        $user = $this->createAdminUser([
+            'email' => 'test@example.com',
+            'password_hash' => Hash::make('password123'),
+            'permissions' => ['admin.*'],
+        ]);
+
+        $request = new Request([
+            'email' => 'test@example.com',
+            'password' => 'password123',
+        ]);
+
+        $response = $this->controller->login($request);
+        $data = $response->getData(true);
+
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(['admin.*'], $data['data']['user']['permissions']);
+    }
+
+    /**
+     * Test login method with multi-tenancy context
+     */
+    public function test_login_method_with_multi_tenancy_context()
+    {
+        $tenant = $this->createTenant();
+        $this->setCurrentTenant($tenant);
+        
         $user = $this->createAdminUser([
             'email' => 'test@example.com',
             'password_hash' => Hash::make('password123'),
@@ -43,10 +145,6 @@ class AuthControllerTest extends TestCase
         
         $data = $response->getData(true);
         $this->assertTrue($data['success']);
-        $this->assertEquals('Login successful', $data['message']);
-        $this->assertArrayHasKey('access_token', $data['data']);
-        $this->assertArrayHasKey('user', $data['data']);
-        $this->assertEquals('test@example.com', $data['data']['user']['email']);
     }
 
     /**
@@ -330,5 +428,111 @@ class AuthControllerTest extends TestCase
 
         $response = $this->controller->login($request);
         $this->assertEquals(401, $response->getStatusCode());
+    }
+
+    /**
+     * Test scope mapping for different permission patterns
+     */
+    public function test_scope_mapping_for_different_permission_patterns()
+    {
+        // Test specific user permissions
+        $user1 = $this->createAdminUser([
+            'email' => 'user1@example.com',
+            'password_hash' => Hash::make('password123'),
+            'permissions' => ['users.read', 'users.create'],
+        ]);
+
+        $request1 = new Request([
+            'email' => 'user1@example.com',
+            'password' => 'password123',
+        ]);
+
+        $response1 = $this->controller->login($request1);
+        $this->assertEquals(200, $response1->getStatusCode());
+
+        // Test wildcard permissions
+        $user2 = $this->createAdminUser([
+            'email' => 'user2@example.com',
+            'password_hash' => Hash::make('password123'),
+            'permissions' => ['personas.*'],
+        ]);
+
+        $request2 = new Request([
+            'email' => 'user2@example.com',
+            'password' => 'password123',
+        ]);
+
+        $response2 = $this->controller->login($request2);
+        $this->assertEquals(200, $response2->getStatusCode());
+    }
+
+    /**
+     * Test refresh token response structure
+     */
+    public function test_refresh_token_response_structure()
+    {
+        $user = $this->createAdminUser([
+            'email' => 'test@example.com',
+            'password_hash' => Hash::make('password123'),
+        ]);
+
+        $request = new Request([
+            'email' => 'test@example.com',
+            'password' => 'password123',
+        ]);
+
+        $response = $this->controller->login($request);
+        $data = $response->getData(true);
+
+        // Verify refresh token is present in response
+        $this->assertArrayHasKey('refresh_token', $data['data']);
+        
+        // The refresh token might be null if not properly configured, but the key should exist
+        $this->assertTrue(array_key_exists('refresh_token', $data['data']));
+    }
+
+    /**
+     * Test token response includes all required fields
+     */
+    public function test_token_response_includes_all_required_fields()
+    {
+        $user = $this->createAdminUser([
+            'email' => 'test@example.com',
+            'password_hash' => Hash::make('password123'),
+            'permissions' => ['users.read', 'chat.write'],
+        ]);
+
+        $request = new Request([
+            'email' => 'test@example.com',
+            'password' => 'password123',
+        ]);
+
+        $response = $this->controller->login($request);
+        $data = $response->getData(true);
+
+        $expectedFields = [
+            'access_token',
+            'refresh_token',
+            'token_type',
+            'expires_in',
+            'user'
+        ];
+
+        foreach ($expectedFields as $field) {
+            $this->assertArrayHasKey($field, $data['data'], "Missing field: {$field}");
+        }
+
+        $expectedUserFields = [
+            'id',
+            'email',
+            'full_name',
+            'permissions',
+            'is_active',
+            'last_login'
+        ];
+
+        foreach ($expectedUserFields as $field) {
+            $this->assertArrayHasKey($field, $data['data']['user'], "Missing user field: {$field}");
+        }
     }
 }

@@ -16,6 +16,7 @@ class TenantSeeder extends Seeder
             [
                 'name' => 'Acme Corporation',
                 'domain' => 'acme.com',
+                'app_key' => '550e8400-e29b-41d4-a716-446655440001', // Fixed UUID for testing
                 'is_active' => true,
                 'settings' => [
                     'theme' => 'dark',
@@ -29,6 +30,7 @@ class TenantSeeder extends Seeder
             [
                 'name' => 'TechStart Inc',
                 'domain' => 'techstart.io',
+                'app_key' => '550e8400-e29b-41d4-a716-446655440002', // Fixed UUID for testing
                 'is_active' => true,
                 'settings' => [
                     'theme' => 'light',
@@ -42,6 +44,7 @@ class TenantSeeder extends Seeder
             [
                 'name' => 'Global Solutions',
                 'domain' => 'globalsolutions.net',
+                'app_key' => '550e8400-e29b-41d4-a716-446655440003', // Fixed UUID for testing
                 'is_active' => true,
                 'settings' => [
                     'theme' => 'auto',
@@ -55,6 +58,7 @@ class TenantSeeder extends Seeder
             [
                 'name' => 'Demo Company',
                 'domain' => 'localhost',
+                'app_key' => '550e8400-e29b-41d4-a716-446655440004', // Fixed UUID for testing
                 'is_active' => true,
                 'settings' => [
                     'theme' => 'light',
@@ -68,6 +72,7 @@ class TenantSeeder extends Seeder
             [
                 'name' => 'Development Environment',
                 'domain' => '127.0.0.1',
+                'app_key' => '550e8400-e29b-41d4-a716-446655440005', // Fixed UUID for testing
                 'is_active' => true,
                 'settings' => [
                     'theme' => 'dark',
@@ -82,7 +87,7 @@ class TenantSeeder extends Seeder
 
         foreach ($tenants as $tenantData) {
             Tenant::firstOrCreate(
-                ['domain' => $tenantData['domain']],
+                ['app_key' => $tenantData['app_key']], // Use app_key instead of domain for uniqueness
                 $tenantData
             );
         }
